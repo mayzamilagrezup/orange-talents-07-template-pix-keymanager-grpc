@@ -10,7 +10,7 @@ import jakarta.inject.Singleton
 
 @ErrorHandler
 @Singleton
-class RegistraChavePixServer(@Inject val service: NovaChavePixService) : KeyManagerRegistraServiceGrpc.KeyManagerRegistraServiceImplBase() {
+class RegistraChavePixEndpoint(@Inject val service: NovaChavePixService) : KeyManagerRegistraServiceGrpc.KeyManagerRegistraServiceImplBase() {
 
     override fun regitra(
         request: RegistraChavePixRequest,

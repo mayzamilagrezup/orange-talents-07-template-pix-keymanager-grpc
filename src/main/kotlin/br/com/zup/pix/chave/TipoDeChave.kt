@@ -40,10 +40,7 @@ enum class TipoDeChave {
                 return false
             }
 
-            return EmailValidator().run {
-                initialize(null)
-                isValid(chave, null)
-            }
+            return chave.matches("^[A-Za-z0-9+_.-]+@(.+)\$".toRegex())
         }
     },
 
