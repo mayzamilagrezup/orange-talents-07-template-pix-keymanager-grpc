@@ -39,7 +39,7 @@ enum class TipoDeChave {
                 return false
             }
 
-            return chave.matches("^[A-Za-z0-9+_.-]+@(.+)\$".toRegex())
+            return chave.matches("^[\\w-.]+@([\\w-]+\\.)+[\\w-]{2,4}\$".toRegex())
         }
     },
 
