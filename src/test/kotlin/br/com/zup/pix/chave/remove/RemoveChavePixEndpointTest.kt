@@ -1,19 +1,21 @@
 package br.com.zup.pix.chave.remove
 
 import br.com.zup.KeyManagerRemoveServiceGrpc
+import br.com.zup.RemoveChavePixRequest
 import br.com.zup.pix.chave.ChavePix
 import br.com.zup.pix.chave.ChavePixRepository
 import br.com.zup.pix.chave.ContaAssociada
 import br.com.zup.pix.chave.TipoDeChave
 import io.grpc.ManagedChannel
+import io.grpc.Status
+import io.grpc.StatusRuntimeException
 import io.micronaut.context.annotation.Bean
 import io.micronaut.context.annotation.Factory
 import io.micronaut.grpc.annotation.GrpcChannel
 import io.micronaut.grpc.server.GrpcServerChannel
 import io.micronaut.test.extensions.junit5.annotation.MicronautTest
-import org.junit.jupiter.api.AfterEach
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.*
+import org.junit.jupiter.api.Assertions.assertEquals
 import java.util.*
 
 @MicronautTest(transactional = false)
@@ -41,11 +43,52 @@ internal class RemoveChavePixEndpointTest(
     @Test
     fun `deve remover chave pix existente`() {
 
+        val response = grpcClient.remove(
+            RemoveChavePixRequest.newBuilder()
+                .setPixId(CHAVE_EXISTENTE.id.toString())
+                .setClienteId(CHAVE_EXISTENTE.clienteId.toString())
+                .build()
+        )
+
+        assertEquals(CHAVE_EXISTENTE.id.toString(), response.pixId)
+        assertEquals(CHAVE_EXISTENTE.clienteId.toString(), response.clienteId)
     }
 
+    @Test
+    fun `nao deve remover chave pix quando chave nao existente`() {
 
+        val pixIdNaoExistente = UUID.randomUUID().toString()
 
+        val excecao = assertThrows<StatusRuntimeException> {
+            grpcClient.remove(RemoveChavePixRequest.newBuilder()
+                .setPixId(pixIdNaoExistente)
+                .setClienteId(CHAVE_EXISTENTE.clienteId.toString())
+                .build())
+        }
 
+        with(excecao) {
+            assertEquals(Status.NOT_FOUND.code, status.code)
+            assertEquals("Chave pix não encontrada ou não pertence ao cliente", status.description)
+        }
+    }
+
+    @Test
+    fun `nao deve remover chave pix quando chave existir mas pertencente a outro cliente`() {
+
+        val outroClienteId = UUID.randomUUID().toString()
+
+        val excecao = assertThrows<StatusRuntimeException> {
+            grpcClient.remove(RemoveChavePixRequest.newBuilder()
+                .setPixId(CHAVE_EXISTENTE.id.toString())
+                .setClienteId(outroClienteId)
+                .build())
+        }
+
+        with(excecao) {
+            assertEquals(Status.NOT_FOUND.code, status.code)
+            assertEquals("Chave pix não encontrada ou não pertence ao cliente", status.description)
+        }
+    }
 
     @Factory
     class Clients {
