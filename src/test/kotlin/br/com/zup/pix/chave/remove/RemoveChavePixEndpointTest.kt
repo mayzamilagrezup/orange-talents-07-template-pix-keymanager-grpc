@@ -73,7 +73,7 @@ internal class RemoveChavePixEndpointTest(
     }
 
     @Test
-    fun `nao deve remover chave pix quando chave existir mas pertencente a outro cliente`() {
+    fun `nao deve remover chave pix quando chave existente mas pertencente a outro cliente`() {
 
         val outroClienteId = UUID.randomUUID().toString()
 

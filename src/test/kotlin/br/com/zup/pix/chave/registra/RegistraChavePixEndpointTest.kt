@@ -8,10 +8,10 @@ import br.com.zup.pix.chave.ChavePix
 import br.com.zup.pix.chave.ChavePixRepository
 import br.com.zup.pix.chave.ContaAssociada
 import br.com.zup.pix.chave.TipoDeChave.*
-import br.com.zup.pix.clientes.ItauClient
-import br.com.zup.pix.clientes.response.DadosDaContaResponse
-import br.com.zup.pix.clientes.response.InstituicaoResponse
-import br.com.zup.pix.clientes.response.TitularResponse
+import br.com.zup.pix.clientes.itau.ItauClient
+import br.com.zup.pix.clientes.itau.response.DadosDaContaResponse
+import br.com.zup.pix.clientes.itau.response.InstituicaoResponse
+import br.com.zup.pix.clientes.itau.response.TitularResponse
 import io.grpc.ManagedChannel
 import io.grpc.Status
 import io.grpc.StatusRuntimeException

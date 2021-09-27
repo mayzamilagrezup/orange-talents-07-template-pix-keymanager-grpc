@@ -1,6 +1,6 @@
-package br.com.zup.pix.clientes
+package br.com.zup.pix.clientes.itau
 
-import br.com.zup.pix.clientes.response.DadosDaContaResponse
+import br.com.zup.pix.clientes.itau.response.DadosDaContaResponse
 import io.micronaut.http.HttpResponse
 import io.micronaut.http.annotation.Get
 import io.micronaut.http.annotation.PathVariable

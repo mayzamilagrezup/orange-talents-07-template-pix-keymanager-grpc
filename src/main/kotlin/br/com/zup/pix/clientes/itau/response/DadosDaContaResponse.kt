@@ -1,4 +1,4 @@
-package br.com.zup.pix.clientes.response
+package br.com.zup.pix.clientes.itau.response
 
 import br.com.zup.pix.chave.ContaAssociada
 
