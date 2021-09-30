@@ -3,7 +3,7 @@ package br.com.zup.pix.chave.remove
 import br.com.zup.pix.anotacoes.ValidUUID
 import br.com.zup.pix.chave.ChavePixRepository
 import br.com.zup.pix.clientes.bcb.BancoCentralClient
-import br.com.zup.pix.clientes.bcb.request.DeletaChaveRequest
+import br.com.zup.pix.clientes.bcb.request.RemoveChaveRequest
 import br.com.zup.pix.excecoes.ChavePixNaoEncontradaException
 import io.micronaut.http.HttpStatus
 import io.micronaut.validation.Validated
@@ -40,11 +40,11 @@ class RemoveChavePixService(
 
         repository.deleteById(uuidPixId)
 
-        val request = DeletaChaveRequest(chave.chave)
+        val request = RemoveChaveRequest(chave.chave)
 
-        val bcbResponse = bcbClient.deleta(key = chave.chave, request = request)
+        val bcbResponse = bcbClient.remove(key = chave.chave, request = request)
         if (bcbResponse.status != HttpStatus.OK) {
-            throw IllegalStateException("Erro ao remover chave pix no Banco Central")
+            throw IllegalStateException("Erro ao tentar remover chave pix no Banco Central")
         }
 
         log.info("chave pix de id ${chave.id} pertencente ao cliente de id ${chave.clienteId} removida com sucesso!")

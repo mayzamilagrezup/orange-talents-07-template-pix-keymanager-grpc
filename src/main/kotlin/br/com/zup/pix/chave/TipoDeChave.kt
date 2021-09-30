@@ -49,5 +49,4 @@ enum class TipoDeChave {
 
     abstract fun valida(chave: String?): Boolean
 
-
 }

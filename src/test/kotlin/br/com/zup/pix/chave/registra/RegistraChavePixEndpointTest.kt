@@ -7,7 +7,13 @@ import br.com.zup.TipoDeConta
 import br.com.zup.pix.chave.ChavePix
 import br.com.zup.pix.chave.ChavePixRepository
 import br.com.zup.pix.chave.ContaAssociada
-import br.com.zup.pix.chave.TipoDeChave.*
+import br.com.zup.pix.chave.TipoDeChave.CPF
+import br.com.zup.pix.clientes.bcb.BancoCentralClient
+import br.com.zup.pix.clientes.bcb.TipoChaveBcb
+import br.com.zup.pix.clientes.bcb.request.ClienteRequest
+import br.com.zup.pix.clientes.bcb.request.ContaBancoRequest
+import br.com.zup.pix.clientes.bcb.request.CriaChavePixRequest
+import br.com.zup.pix.clientes.bcb.response.CriaChavePixResponse
 import br.com.zup.pix.clientes.itau.ItauClient
 import br.com.zup.pix.clientes.itau.response.DadosDaContaResponse
 import br.com.zup.pix.clientes.itau.response.InstituicaoResponse
@@ -30,6 +36,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.mockito.Mockito
 import org.mockito.Mockito.`when`
+import java.time.LocalDateTime
 import java.util.*
 
 
@@ -39,6 +46,8 @@ internal class RegistraChavePixEndpointTest(
     val grpcClient: KeyManagerRegistraServiceGrpc.KeyManagerRegistraServiceBlockingStub
 ) {
 
+    @Inject
+    lateinit var bcbClient: BancoCentralClient
 
     @Inject
     lateinit var itauClient: ItauClient
@@ -55,10 +64,27 @@ internal class RegistraChavePixEndpointTest(
     @Test
     fun `deve registrar uma nova chave pix do tipo cpf valido`() {
 
-        `when`(itauClient.buscaContaPorTipo(clienteId = CLIENTE_ID.toString(), tipo = TipoDeConta.CONTA_CORRENTE.toString()))
+        val tipoDeChave = br.com.zup.pix.chave.TipoDeChave.CPF
+        val chave = "68626892071"
+
+        `when`(
+            itauClient.buscaContaPorTipo(
+                clienteId = CLIENTE_ID.toString(),
+                tipo = TipoDeConta.CONTA_CORRENTE.toString()
+            )
+        )
             .thenReturn(HttpResponse.ok(dadosDaContaResponse()))
 
-        val response = registraChavePixRequest(TipoDeChave.CPF, "46196026046", TipoDeConta.CONTA_CORRENTE)
+        `when`(bcbClient.registra(bcbRequest(tipoDeChave, chave))).thenReturn(
+            HttpResponse.created(
+                bcbResponse(
+                    tipoDeChave,
+                    chave
+                )
+            )
+        )
+
+        val response = registraChavePixRequest(TipoDeChave.CPF, chave, TipoDeConta.CONTA_CORRENTE)
 
         with(response) {
             assertEquals(CLIENTE_ID.toString(), clienteId)
@@ -69,10 +95,27 @@ internal class RegistraChavePixEndpointTest(
     @Test
     fun `deve registrar uma nova chave pix do tipo celular valido`() {
 
-        `when`(itauClient.buscaContaPorTipo(clienteId = CLIENTE_ID.toString(), tipo = TipoDeConta.CONTA_CORRENTE.toString()))
+        val tipoDeChave = br.com.zup.pix.chave.TipoDeChave.CELULAR
+        val chave = "+5521999399457"
+
+        `when`(
+            itauClient.buscaContaPorTipo(
+                clienteId = CLIENTE_ID.toString(),
+                tipo = TipoDeConta.CONTA_CORRENTE.toString()
+            )
+        )
             .thenReturn(HttpResponse.ok(dadosDaContaResponse()))
 
-        val response = registraChavePixRequest(TipoDeChave.CELULAR, "+5521999399457", TipoDeConta.CONTA_CORRENTE)
+        `when`(bcbClient.registra(bcbRequest(tipoDeChave, chave))).thenReturn(
+            HttpResponse.created(
+                bcbResponse(
+                    tipoDeChave,
+                    chave
+                )
+            )
+        )
+
+        val response = registraChavePixRequest(TipoDeChave.CELULAR, chave, TipoDeConta.CONTA_CORRENTE)
 
         with(response) {
             assertEquals(CLIENTE_ID.toString(), clienteId)
@@ -83,24 +126,27 @@ internal class RegistraChavePixEndpointTest(
     @Test
     fun `deve registrar uma nova chave pix do tipo email valido`() {
 
-        `when`(itauClient.buscaContaPorTipo(clienteId = CLIENTE_ID.toString(), tipo = TipoDeConta.CONTA_CORRENTE.toString()))
+        val tipoDeChave = br.com.zup.pix.chave.TipoDeChave.EMAIL
+        val chave = "teste@gmail.com"
+
+        `when`(
+            itauClient.buscaContaPorTipo(
+                clienteId = CLIENTE_ID.toString(),
+                tipo = TipoDeConta.CONTA_CORRENTE.toString()
+            )
+        )
             .thenReturn(HttpResponse.ok(dadosDaContaResponse()))
 
-        val response = registraChavePixRequest(TipoDeChave.EMAIL, "teste@gmail.com", TipoDeConta.CONTA_CORRENTE)
+        `when`(bcbClient.registra(bcbRequest(tipoDeChave, chave))).thenReturn(
+            HttpResponse.created(
+                bcbResponse(
+                    tipoDeChave,
+                    chave
+                )
+            )
+        )
 
-        with(response) {
-            assertEquals(CLIENTE_ID.toString(), clienteId)
-            assertNotNull(pixId)
-        }
-    }
-
-    @Test
-    fun `deve registrar uma nova chave pix aleatoria`() {
-
-        `when`(itauClient.buscaContaPorTipo(clienteId = CLIENTE_ID.toString(), tipo = TipoDeConta.CONTA_CORRENTE.toString()))
-            .thenReturn(HttpResponse.ok(dadosDaContaResponse()))
-
-        val response = registraChavePixRequest(TipoDeChave.ALEATORIA, "", TipoDeConta.CONTA_CORRENTE)
+        val response = registraChavePixRequest(TipoDeChave.EMAIL, chave, TipoDeConta.CONTA_CORRENTE)
 
         with(response) {
             assertEquals(CLIENTE_ID.toString(), clienteId)
@@ -111,19 +157,21 @@ internal class RegistraChavePixEndpointTest(
     @Test
     fun `nao deve registrar chave pix quando chave existente`() {
 
-        repository.save(chave(
-            tipo = CPF,
-            chave = "46196026046",
-            clienteId = CLIENTE_ID
-        ))
+        repository.save(
+            chave(
+                tipo = CPF,
+                chave = "68626892071",
+                clienteId = CLIENTE_ID
+            )
+        )
 
         val excecao = assertThrows<StatusRuntimeException> {
-            registraChavePixRequest(TipoDeChave.CPF, "46196026046", TipoDeConta.CONTA_CORRENTE)
+            registraChavePixRequest(TipoDeChave.CPF, "68626892071", TipoDeConta.CONTA_CORRENTE)
         }
 
         with(excecao) {
             assertEquals(Status.ALREADY_EXISTS.code, status.code)
-            assertEquals("Chave Pix '46196026046' existente", status.description)
+            assertEquals("Chave Pix '68626892071' existente", status.description)
 
         }
     }
@@ -131,16 +179,51 @@ internal class RegistraChavePixEndpointTest(
     @Test
     fun `nao deve registrar chave pix quando o cliente nao for encontrado`() {
 
-        `when`(itauClient.buscaContaPorTipo(clienteId = CLIENTE_ID.toString(), tipo = TipoDeConta.CONTA_CORRENTE.toString()))
+        `when`(
+            itauClient.buscaContaPorTipo(
+                clienteId = CLIENTE_ID.toString(),
+                tipo = TipoDeConta.CONTA_CORRENTE.toString()
+            )
+        )
             .thenReturn(HttpResponse.notFound())
 
         val excecao = assertThrows<StatusRuntimeException> {
-            registraChavePixRequest(TipoDeChave.CPF, "46196026046", TipoDeConta.CONTA_CORRENTE)
+            registraChavePixRequest(TipoDeChave.CPF, "68626892071", TipoDeConta.CONTA_CORRENTE)
         }
 
         with(excecao) {
             assertEquals(Status.FAILED_PRECONDITION.code, status.code)
             assertEquals("Cliente não encontrado no Itau", status.description)
+        }
+
+    }
+
+    @Test
+    fun `nao deve registrar chave pix quando nao for possivel registrar no banco central`() {
+
+        val tipoDeChave = br.com.zup.pix.chave.TipoDeChave.CPF
+        val chave = "68626892071"
+
+        `when`(
+            itauClient.buscaContaPorTipo(
+                clienteId = CLIENTE_ID.toString(),
+                tipo = TipoDeConta.CONTA_CORRENTE.toString()
+            )
+        )
+            .thenReturn(HttpResponse.ok(dadosDaContaResponse()))
+
+        `when`(bcbClient.registra(bcbRequest(tipoDeChave, chave))).thenReturn(
+            HttpResponse.badRequest()
+        )
+
+
+        val excecao = assertThrows<StatusRuntimeException> {
+            registraChavePixRequest(TipoDeChave.CPF, chave, TipoDeConta.CONTA_CORRENTE)
+        }
+
+        with(excecao) {
+            assertEquals(Status.FAILED_PRECONDITION.code, status.code)
+            assertEquals("Erro ao tentar registrar chave pix no Banco Central", status.description)
         }
 
     }
@@ -159,14 +242,21 @@ internal class RegistraChavePixEndpointTest(
     }
 
     @MockBean(ItauClient::class)
-    fun itauClient() : ItauClient? {
+    fun itauClient(): ItauClient? {
         return Mockito.mock(ItauClient::class.java)
     }
+
+    @MockBean(BancoCentralClient::class)
+    fun bcbClient(): BancoCentralClient? {
+        return Mockito.mock(BancoCentralClient::class.java)
+    }
+
+    // Mockito.RETURNS_DEEP_STUBS
 
     @Factory
     class Clients {
         @Bean
-        fun blockingStub(@GrpcChannel(GrpcServerChannel.NAME) channel: ManagedChannel) : KeyManagerRegistraServiceGrpc.KeyManagerRegistraServiceBlockingStub? {
+        fun blockingStub(@GrpcChannel(GrpcServerChannel.NAME) channel: ManagedChannel): KeyManagerRegistraServiceGrpc.KeyManagerRegistraServiceBlockingStub? {
             return KeyManagerRegistraServiceGrpc.newBlockingStub(channel)
         }
     }
@@ -178,7 +268,7 @@ internal class RegistraChavePixEndpointTest(
             instituicao = InstituicaoResponse("UNIBANCO ITAU SA", "ITAU_UNIBANCO_ISPB"),
             agencia = "1452",
             numero = "5555",
-            titular = TitularResponse("Usuario Teste", "63657520325")
+            titular = TitularResponse("Usuario Teste", "68626892071")
         )
 
     }
@@ -198,7 +288,7 @@ internal class RegistraChavePixEndpointTest(
                 agencia = "1452",
                 numero = "5555",
                 nomeTitular = "Usuario Teste",
-                cpfTitular = "46196026046"
+                cpfTitular = "68626892071"
             )
         )
     }
@@ -215,6 +305,28 @@ internal class RegistraChavePixEndpointTest(
             .setTipoDeConta(tipoDeConta)
             .build()
     )
+
+
+    private fun bcbRequest(
+        tipoDeChave: br.com.zup.pix.chave.TipoDeChave,
+        chave: String
+    ): CriaChavePixRequest {
+        return CriaChavePixRequest(chave(tipoDeChave, chave, CLIENTE_ID))
+    }
+
+
+    private fun bcbResponse(
+        tipoDeChave: br.com.zup.pix.chave.TipoDeChave,
+        chave: String
+    ): CriaChavePixResponse {
+        return CriaChavePixResponse(
+            keyType = TipoChaveBcb.by(tipoDeChave),
+            key = chave,
+            bankAccount = ContaBancoRequest(chave(tipoDeChave, chave, CLIENTE_ID)),
+            owner = ClienteRequest(chave(tipoDeChave, chave, CLIENTE_ID)),
+            createdAt = LocalDateTime.now()
+        )
+    }
 
 }
 

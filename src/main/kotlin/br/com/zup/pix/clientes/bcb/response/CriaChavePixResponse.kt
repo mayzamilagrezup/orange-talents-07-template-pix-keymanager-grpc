@@ -5,9 +5,9 @@ import br.com.zup.pix.clientes.bcb.request.ClienteRequest
 import br.com.zup.pix.clientes.bcb.request.ContaBancoRequest
 import java.time.LocalDateTime
 
-data class BcbCriaChavePixResponse(
+data class CriaChavePixResponse(
     val keyType: TipoChaveBcb,
-    val key: String,
+    var key: String,
     val bankAccount: ContaBancoRequest,
     val owner: ClienteRequest,
     val createdAt: LocalDateTime

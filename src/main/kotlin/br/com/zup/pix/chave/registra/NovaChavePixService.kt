@@ -39,6 +39,7 @@ class NovaChavePixService(
         val bcbRequest = CriaChavePixRequest(chave)
 
         val bcbResponse = bcbClient.registra(bcbRequest)
+
         if (bcbResponse.status != HttpStatus.CREATED) {
             throw java.lang.IllegalStateException("Erro ao tentar registrar chave pix no Banco Central")
         }
